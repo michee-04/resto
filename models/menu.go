@@ -37,15 +37,15 @@ func GetMenu() []Menu{
 
 func GetMenuById(Id string) (*Menu, *gorm.DB) {
 	var m Menu
-	db := Db.Preload("Food").Where("menu_id", Id).First(&m)
+	db := Db.Preload("Food").Where("menu_id=?", Id).First(&m)
 	return &m, db
 }
 
 func DeleteMenu(Id string) Menu {
 	var m Menu
 	Db.Preload("Food").Where("menu_id=?", Id).Find(&m)
-	for _, menu := range m.Food {
-		Db.Delete(&menu)
+	for _, food := range m.Food {
+		Db.Delete(&food)
 	}
 	Db.Delete(&m)
 	return m

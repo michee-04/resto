@@ -2,7 +2,10 @@ module github.com/michee-04/resto
 
 go 1.21.10
 
+require golang.org/x/oauth2 v0.21.0
+
 require (
+	cloud.google.com/go/compute/metadata v0.3.0 // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.2.0 // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
 	github.com/go-chi/chi/v5 v5.1.0 // indirect

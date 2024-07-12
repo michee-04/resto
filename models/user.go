@@ -30,8 +30,8 @@ type User struct {
 func init() {
 	database.ConnectDB()
 	Db = database.GetBD()
-	Db.Migrator().DropTable(&User{})
-	Db.AutoMigrate(&User{})
+	// Db.Migrator().DropTable(&User{})
+	// Db.AutoMigrate(&User{})
 }
 
 func (u *User) CreateUser() *User {
@@ -63,10 +63,10 @@ func GetUserByEmail(email string) (*User, error) {
 	return &u, nil
 }
 
-func DeleteUser(Id string) (*User, error) {
+func DeleteUser(Id string) User {
 	var u User
 	Db.Where("user_id=?", Id).Delete(&u)
-	return &u, nil
+	return u
 }
 
 func (u *User) Logout() error {

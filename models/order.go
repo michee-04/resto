@@ -11,7 +11,7 @@ import (
 type Order struct {
 	OrderId   string `gorm:"primary_key;unique;column:order_id" json:"order_id"`
 	Date      time.Time
-	InvoiceId string `gorm:"column:invoice_id" json:"invoice_id"`
+	InvoiceId string `gorm:"not null;index;column:invoice_id" json:"invoice_id"`
 	Invoice   *Invoice
 	OrderItem []*OrderItem
 }
@@ -22,7 +22,7 @@ func init() {
 	// Db.AutoMigrate(&Order{})
 }
 
-func (o *Order) CreateOrder() *Order{
+func (o *Order) CreateOrder() *Order {
 	o.OrderId = uuid.New().String()
 	Db.Create(&o)
 	return o

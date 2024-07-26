@@ -17,10 +17,28 @@ import (
 	"gorm.io/gorm"
 )
 
+type UserResponse struct {
+	UserId      string `json:"user_id"`
+	Username    string `json:"username"`
+	Email       string `json:"email"`
+	IsAdmin     bool   `json:"is_admin"`
+	Token       string `json:"token"`
+	EmailVerify bool   `json:"emil_verify"`
+}
 
 func CreateUser(w http.ResponseWriter, r *http.Request) {
 	user := &models.User{}
 	utils.ParseBody(r, &user)
+
+	emailExists, err := models.GetEmailExists(user.Email)
+	if err != nil {
+		utils.ResponseWithJson(w, http.StatusInternalServerError, "Error", err)
+		return
+	}
+	if emailExists {
+		utils.ResponseWithJson(w, http.StatusConflict, "email already exists", err)
+		return
+	}
 
 	hashedPassword, _ := utils.HashedPassword(user.Password)
 	emailToken := utils.GenerateVerificationToken()
@@ -54,8 +72,8 @@ func GetUserById(w http.ResponseWriter, r *http.Request) {
 
 func DeleteUser(w http.ResponseWriter, r *http.Request) {
 	userId := chi.URLParam(r, "userId")
-	u:= models.DeleteUser(userId)
-	
+	u := models.DeleteUser(userId)
+
 	utils.ResponseWithJson(w, http.StatusOK, "Delete user successful", u)
 }
 
@@ -123,17 +141,26 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	user, err := models.GetUserByEmail(loginReq.Email)
+	if err != nil {
+		http.Error(w, "Database querry failed", http.StatusInternalServerError)
+		return
+	}
+
+	if user == nil {
+		utils.ResponseWithJson(w, http.StatusUnauthorized, "Invalid email", nil)
+	}
+
 	if !user.EmailVerify {
 		utils.ResponseWithJson(w, http.StatusUnauthorized, "Email not verified", nil)
 		return
-	} 
+	}
 	if user.Password == "" {
 		http.Error(w, "Add Password", http.StatusUnauthorized)
 		return
 	}
 
-	if err != nil || !utils.CheckPasswordHash(loginReq.Password, user.Password) {
-		http.Error(w, "Invalid email or password", http.StatusUnauthorized)
+	if !utils.CheckPasswordHash(loginReq.Password, user.Password) {
+		http.Error(w, "Invalid password", http.StatusUnauthorized)
 		return
 	}
 
@@ -145,8 +172,16 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 	user.Token = token
 	models.Db.Save(&user)
+	userResponse := UserResponse{
+		UserId:      user.UserId,
+		Username:    user.Username,
+		Email:       user.Email,
+		IsAdmin:     user.IsAdmin,
+		Token:       user.Token,
+		EmailVerify: user.EmailVerify,
+	}
 
-	utils.ResponseWithJson(w, http.StatusOK, "Login successful", map[string]string{"token": token})
+	utils.ResponseWithJson(w, http.StatusOK, "Login successful", userResponse)
 }
 
 func LogoutUser(w http.ResponseWriter, r *http.Request) {
@@ -167,7 +202,6 @@ func LogoutUser(w http.ResponseWriter, r *http.Request) {
 
 	utils.ResponseWithJson(w, http.StatusOK, "Logout successful", nil)
 }
-
 
 func VerifyHandler(w http.ResponseWriter, r *http.Request) {
 	token := r.URL.Query().Get("token")
@@ -280,7 +314,6 @@ func ResetPasswordHandler(w http.ResponseWriter, r *http.Request) {
 
 	utils.ResponseWithJson(w, http.StatusOK, "Password updated successfully", nil)
 }
-
 
 func SetPasswordHandler(w http.ResponseWriter, r *http.Request) {
 	// Récupère l'email depuis le header ou les paramètres de la requête

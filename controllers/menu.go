@@ -11,10 +11,9 @@ import (
 	"gorm.io/gorm"
 )
 
-
 func CreateMenu(w http.ResponseWriter, r *http.Request) {
 	menu := &models.Menu{}
-	utils.ParseBody(r, menu)
+	utils.ParseBody(r, &menu)
 	m := menu.CreateMenu()
 	res, _ := json.Marshal(m)
 	w.Header().Set("content-type", "application/json")
@@ -68,11 +67,7 @@ func UpdateMenu(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.ResponseWithJson(w, http.StatusOK, "Menu update successful", nil)
-	res, _ := json.Marshal(m)
-	w.Header().Set("content-type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	w.Write(res)
+	utils.ResponseWithJson(w, http.StatusOK, "Menu update successful", m)
 }
 
 func Deletemenu(w http.ResponseWriter, r *http.Request) {

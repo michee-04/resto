@@ -7,17 +7,18 @@ import (
 )
 
 type Food struct {
-	FoodId    string `gorm:"unique;not null;column:food_id" json:"food_id"`
+	FoodId    string `gorm:"unique;not null; primary_key;column:food_id" json:"food_id"`
 	Name      string `gorm:"column:name" json:"name"`
 	Price     string `gorm:"not null; column:price" json:"price"`
 	FoodImage string `gorm:"not null; column:food_image" json:"food_image"`
-	MenuId    string `gorm:"not null; index;foreignKey:MenuId"`
+	MenuId    string `gorm:"not null; index;column:menu_id" json:"menu_id"`
 	Menu      *Menu
 }
 
 func init() {
 	database.ConnectDB()
 	Db = database.GetBD()
+	// Db.Migrator().DropTable(&Food{})
 	// Db.AutoMigrate(&Food{})
 }
 
@@ -41,6 +42,6 @@ func GetFoodById(Id string) (*Food, *gorm.DB) {
 
 func DeleteFood(Id string) Food {
 	var f Food
-	Db.Preload("Menu").Where("food_id").Delete(&f)
+	Db.Preload("Menu").Where("food_id=?", Id).Delete(&f)
 	return f
-} 
+}

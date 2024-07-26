@@ -25,6 +25,7 @@ type User struct {
 	TokenAccount  string    `gorm:"column:token_account" json:"token_account"`
 	TokenPassword string    `gorm:"column:token_password" json:"token_password"`
 	ExpiryToken   time.Time `gorm:"column:expiry_token" json:"expiry_token"`
+	Invoice       []*Invoice
 }
 
 func init() {
@@ -42,13 +43,13 @@ func (u *User) CreateUser() *User {
 
 func GetUser() []User {
 	var u []User
-	Db.Find(&u)
+	Db.Preload("Invoice").Find(&u)
 	return u
 }
 
 func GetUserById(Id string) (*User, *gorm.DB) {
 	var u User
-	db := Db.Where("user_id=?", Id).First(&u)
+	db := Db.Preload("Invoice").Where("user_id=?", Id).First(&u)
 	return &u, db
 }
 
@@ -63,9 +64,24 @@ func GetUserByEmail(email string) (*User, error) {
 	return &u, nil
 }
 
+func GetEmailExists(email string) (bool, error) {
+	var u User
+	if err := Db.Where("email=/", email).First(&u).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return false, nil
+		}
+		return false, nil
+	}
+	return true, nil
+}
+
 func DeleteUser(Id string) User {
 	var u User
-	Db.Where("user_id=?", Id).Delete(&u)
+	Db.Preload("Invoice").Where("user_id=?", Id).Find(&u)
+	for _, invoice := range u.Invoice {
+		Db.Delete(&invoice)
+	}
+	Db.Delete(&u)
 	return u
 }
 

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -24,7 +25,9 @@ func main() {
 		log.Fatal("Error loading .env file")
 	}
 
-	tokenAuth = jwtauth.New("HS256", []byte("ksQD5adHXZ-5SSJCupcHwBzDi6q5kfr5hdU7Eq5tMmo"), nil)
+	jwtKey := os.Getenv("JWT_TOKEN_KEY")
+
+	tokenAuth = jwtauth.New("HS256", []byte(jwtKey), nil)
 
 	r := chi.NewRouter()
 
@@ -64,11 +67,94 @@ func main() {
 
 		r.With(provider.AdminOnly).Post("/create", controllers.CreateMenu)
 		r.Get("/", controllers.GetMenu)
-		
+
 		r.Route("/{menuId}", func(r chi.Router) {
 			r.Get("/", controllers.GetMenuById)
 			r.With(provider.AdminOnly).Patch("/", controllers.UpdateMenu)
 			r.With(provider.AdminOnly).Delete("/", controllers.Deletemenu)
+		})
+	})
+
+	r.Route("/food", func(r chi.Router) {
+		r.Use(jwtauth.Verifier(tokenAuth))
+		r.Use(jwtauth.Authenticator(tokenAuth))
+
+		r.With(provider.AdminOnly).Post("/create/{menuId}", controllers.CreateFodd)
+		r.Get("/", controllers.GetFood)
+
+		r.Route("/{foodId}", func(r chi.Router) {
+			r.Get("/", controllers.GetfoodId)
+			r.With(provider.AdminOnly).Patch("/", controllers.UpdateFood)
+			r.With(provider.AdminOnly).Delete("/", controllers.Deletefood)
+		})
+	})
+
+	r.Route("/invoice", func(r chi.Router) {
+		r.Use(jwtauth.Verifier(tokenAuth))
+		r.Use(jwtauth.Authenticator(tokenAuth))
+
+		r.With(provider.AdminOnly).Post("/create/{userId}", controllers.CreateInvoice)
+		r.Get("/", controllers.GetInvoice)
+
+		r.Route("/{invoiceId}", func(r chi.Router) {
+			r.Get("/", controllers.GetInvoiceId)
+			r.With(provider.AdminOnly).Patch("/", controllers.UpdateInvoice)
+			r.With(provider.AdminOnly).Delete("/", controllers.DeleteInvoice)
+		})
+	})
+
+	r.Route("/note", func(r chi.Router) {
+		r.Use(jwtauth.Verifier(tokenAuth))
+		r.Use(jwtauth.Authenticator(tokenAuth))
+
+		r.With(provider.AdminOnly).Post("/create", controllers.CreateNote)
+		r.Get("/", controllers.GetNote)
+
+		r.Route("/{noteId}", func(r chi.Router) {
+			r.Get("/", controllers.GetNoteId)
+			r.With(provider.AdminOnly).Patch("/", controllers.UpdateNote)
+			r.With(provider.AdminOnly).Delete("/", controllers.DeleteNote)
+		})
+	})
+
+	r.Route("/order", func(r chi.Router) {
+		r.Use(jwtauth.Verifier(tokenAuth))
+		r.Use(jwtauth.Authenticator(tokenAuth))
+
+		r.With(provider.AdminOnly).Post("/create/{invoiceId}", controllers.CreateOrder)
+		r.Get("/", controllers.GetOrder)
+
+		r.Route("/{orderId}", func(r chi.Router) {
+			r.Get("/", controllers.GetOrderId)
+			r.With(provider.AdminOnly).Delete("/", controllers.DeleteOrder)
+		})
+	})
+
+	r.Route("/order-item", func(r chi.Router) {
+		r.Use(jwtauth.Verifier(tokenAuth))
+		r.Use(jwtauth.Authenticator(tokenAuth))
+
+		r.With(provider.AdminOnly).Post("/create", controllers.CreateOrderItem)
+		r.Get("/", controllers.GetOrderItem)
+
+		r.Route("/{orderItemId}", func(r chi.Router) {
+			r.Get("/", controllers.GetOrderItemId)
+			r.With(provider.AdminOnly).Patch("/", controllers.UpdateOrderItem)
+			r.With(provider.AdminOnly).Delete("/", controllers.DeleteOrderIten)
+		})
+	})
+
+	r.Route("/table", func(r chi.Router) {
+		r.Use(jwtauth.Verifier(tokenAuth))
+		r.Use(jwtauth.Authenticator(tokenAuth))
+
+		r.With(provider.AdminOnly).Post("/create", controllers.CreateTable)
+		r.Get("/", controllers.GetTable)
+
+		r.Route("/{tableId}", func(r chi.Router) {
+			r.Get("/", controllers.GetTableId)
+			r.With(provider.AdminOnly).Patch("/", controllers.UpdateTable)
+			r.With(provider.AdminOnly).Delete("/", controllers.DeletTable)
 		})
 	})
 

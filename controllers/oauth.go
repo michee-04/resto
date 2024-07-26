@@ -20,8 +20,6 @@ func GoogleLogin(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, url, http.StatusSeeOther)
 }
 
-
-
 func GoogleCallback(w http.ResponseWriter, r *http.Request) {
 	state := r.URL.Query().Get("state")
 	if state != "randomstate" {
@@ -82,9 +80,9 @@ func GoogleCallback(w http.ResponseWriter, r *http.Request) {
 	// Si l'utilisateur n'existe pas, créez un nouvel utilisateur
 	if user == nil {
 		user = &models.User{
-			Email:         googleUser.Email,
+			Email:       googleUser.Email,
 			EmailVerify: googleUser.VerifiedEmail,
-			Username:      googleUser.GivenName,
+			Username:    googleUser.GivenName,
 		}
 		user.CreateUser()
 	}
@@ -99,7 +97,14 @@ func GoogleCallback(w http.ResponseWriter, r *http.Request) {
 	// Mettre à jour le champ token_jwt de l'utilisateur
 	user.Token = jwtToken
 	models.Db.Save(user)
+	userResponse := UserResponse{
+		UserId:   user.UserId,
+		Username: user.Username,
+		Email:    user.Email,
+		IsAdmin:  user.IsAdmin,
+		Token:    user.Token,
+	}
 
 	// Répondre avec le jeton JWT
-	utils.ResponseWithJson(w, http.StatusOK, "Login successful", map[string]string{"token": jwtToken})
+	utils.ResponseWithJson(w, http.StatusOK, "Login successful", userResponse)
 }

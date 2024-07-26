@@ -2,12 +2,14 @@ package provider
 
 import (
 	"errors"
+	"os"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
 )
 
-var jwtKey = []byte("ksQD5adHXZ-5SSJCupcHwBzDi6q5kfr5hdU7Eq5tMmo")
+var jwt_key = os.Getenv("JWT_TOKEN_KEY")
+var jwtKey = []byte(jwt_key)
 
 type Claims struct {
 	UserId  string `json:"userId"`

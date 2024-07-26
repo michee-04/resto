@@ -12,7 +12,7 @@ type Invoice struct {
 	InvoiceId     string `gorm:"primary_key;not null;unique;column:invoice_id" json:"invoice_id"`
 	PaymentMethod string `gorm:"column:payment_method" json:"payment_method"`
 	Status        string `gorm:"column:status" json:"status"`
-	UserId        string `gorm:"column:user_id" json:"user_id"`
+	UserId        string `gorm:"not null; index;column:user_id" json:"user_id"`
 	Date          time.Time
 	User          *User
 	Order         []*Order
@@ -21,6 +21,7 @@ type Invoice struct {
 func init() {
 	database.ConnectDB()
 	Db = database.GetBD()
+	// Db.Migrator().DropTable(&Invoice{})
 	// Db.AutoMigrate(&Invoice{})
 }
 
